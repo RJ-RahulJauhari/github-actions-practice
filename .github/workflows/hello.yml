@@ -5,7 +5,9 @@ on:
   workflow_dispatch:
 
 jobs:
+    # 1st Job (give indentation)
     say-hello:
+        # creates a ephermal container with Ubuntu running
         runs-on: ubuntu-latest
         steps:
             - name: Say hello to everyone
