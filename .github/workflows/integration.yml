@@ -45,7 +45,7 @@ jobs:
                   tags: rjrahuljauhari/learning-cicd:latest
 
     backend-jobs:
-        runs-on: ubuntu_latest
+        runs-on: ubuntu-latest
         defaults:
             run:
                 working-directory: ./backend
