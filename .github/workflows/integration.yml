@@ -3,6 +3,9 @@ name: Continuous Integration Pipeline
 on:
   push:
     branches: ["main"]
+    paths:
+      - "frontend/**"
+      - "backend/**"
 
 jobs:
   frontend-jobs:
