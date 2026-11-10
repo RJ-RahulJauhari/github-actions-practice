@@ -54,7 +54,11 @@ jobs:
     strategy:
       matrix:
         service: [frontend, backend]
+
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v4
 
