@@ -72,6 +72,6 @@ jobs:
           tags: rjrahuljauhari/learning-cicd-${{ matrix.service }}:latest
 
   deploy:
-    needs: [frontend-jobs, backend-jobs]
+    needs: [frontend-jobs, backend-jobs, build-and-push]
     uses: ./.github/workflows/deploy.yml
     secrets: inherit
