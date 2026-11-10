@@ -6,6 +6,9 @@ function App() {
     <>
       <div>
         <h1>Good to see you Rahul Jauhari!</h1>
+        <div>
+          <p>Welcome to the frontend application!</p>
+        </div>
       </div>
     </>
   )
