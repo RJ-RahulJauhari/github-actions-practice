@@ -5,25 +5,7 @@ on:
     branches: ["main"]
 
 jobs:
-  clone-repo:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Upload Repository Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: repository-source
-          path: |
-            frontend/
-            backend/
-            docker-compose.yml
-          retention-days: 1
-
   frontend-jobs:
-    needs: clone-repo
     runs-on: ubuntu-latest
 
     defaults:
@@ -31,16 +13,15 @@ jobs:
         working-directory: ./frontend
 
     steps:
-      - name: Download Repository Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: repository-source
-          path: .
+      - name: Checkout Frontend
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
+          cache-dependency-path: ./frontend/package-lock.json
 
       - name: Install Dependencies
         run: npm ci
@@ -59,7 +40,6 @@ jobs:
           retention-days: 1
 
   backend-jobs:
-    needs: clone-repo
     runs-on: ubuntu-latest
 
     defaults:
@@ -67,16 +47,15 @@ jobs:
         working-directory: ./backend
 
     steps:
-      - name: Download Repository Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: repository-source
-          path: .
+      - name: Checkout Backend
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
+          cache-dependency-path: ./backend/package-lock.json
 
       - name: Install Dependencies
         run: npm ci
@@ -93,11 +72,8 @@ jobs:
         service: [frontend, backend]
 
     steps:
-      - name: Download Repository Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: repository-source
-          path: .
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
       - name: Download Frontend Build Artifact
         if: matrix.service == 'frontend'
@@ -123,6 +99,6 @@ jobs:
           tags: rjrahuljauhari/learning-cicd-${{ matrix.service }}:latest
 
   deploy:
-    needs: [clone-repo, frontend-jobs, backend-jobs, build-and-push]
+    needs: [frontend-jobs, backend-jobs, build-and-push]
     uses: ./.github/workflows/deploy.yml
     secrets: inherit
