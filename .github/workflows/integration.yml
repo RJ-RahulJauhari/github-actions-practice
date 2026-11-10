@@ -1,18 +1,41 @@
-name: Continous Integration Pipeline
+name: Continuous Integration Pipeline
 
 on:
   push:
     branches: ["main"]
 
 jobs:
-  frontend-jobs:
+  clone-repo:
     runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Upload Repository Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: repository-source
+          path: |
+            frontend/
+            backend/
+            docker-compose.yml
+          retention-days: 1
+
+  frontend-jobs:
+    needs: clone-repo
+    runs-on: ubuntu-latest
+
     defaults:
       run:
         working-directory: ./frontend
+
     steps:
-      - name: Clone Frontend
-        uses: actions/checkout@v4
+      - name: Download Repository Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: repository-source
+          path: .
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -33,15 +56,22 @@ jobs:
         with:
           name: frontend-dist
           path: ./frontend/dist/
+          retention-days: 1
 
   backend-jobs:
+    needs: clone-repo
     runs-on: ubuntu-latest
+
     defaults:
       run:
         working-directory: ./backend
+
     steps:
-      - name: Clone Backend
-        uses: actions/checkout@v4
+      - name: Download Repository Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: repository-source
+          path: .
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -63,8 +93,11 @@ jobs:
         service: [frontend, backend]
 
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+      - name: Download Repository Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: repository-source
+          path: .
 
       - name: Download Frontend Build Artifact
         if: matrix.service == 'frontend'
@@ -82,7 +115,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Building and Pushing Docker Image
+      - name: Build and Push Docker Image
         uses: docker/build-push-action@v6
         with:
           context: ./${{ matrix.service }}
@@ -90,6 +123,6 @@ jobs:
           tags: rjrahuljauhari/learning-cicd-${{ matrix.service }}:latest
 
   deploy:
-    needs: [frontend-jobs, backend-jobs, build-and-push]
+    needs: [clone-repo, frontend-jobs, backend-jobs, build-and-push]
     uses: ./.github/workflows/deploy.yml
     secrets: inherit
