@@ -28,22 +28,6 @@ jobs:
       - name: Build Frontend Application
         run: npm run build
 
-      - name: Setup Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Build and push Docker Image
-        uses: docker/build-push-action@v6
-        with:
-          context: ./frontend
-          push: true
-          tags: rjrahuljauhari/learning-cicd:latest
-
   backend-jobs:
     runs-on: ubuntu-latest
     defaults:
@@ -64,6 +48,13 @@ jobs:
       - name: Run Linting
         run: npm run lint
 
+  build-and-push:
+    needs: [frontend-jobs, backend-jobs]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [frontend, backend]
+    steps:
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -76,12 +67,9 @@ jobs:
       - name: Building and Pushing Docker Image
         uses: docker/build-push-action@v6
         with:
-          context: ./backend
+          context: ./${{ matrix.service }}
           push: true
-          tags: rjrahuljauhari/learning-cicd-backend:latest
-
-      - name: Push Image to Docker Hub
-        run: echo "Login and Push to Dockerhub..."
+          tags: rjrahuljauhari/learning-cicd-${{ matrix.service }}:latest
 
   deploy:
     needs: [frontend-jobs, backend-jobs]
